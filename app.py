@@ -1,9 +1,13 @@
 import argparse
 import json
 import os
+from pathlib import Path
+import tempfile
 from typing import List
 import torch
 from pyannote.audio import Pipeline
+
+import ffmpeg
 
 from intervaltree import IntervalTree
 from util import write_srt
@@ -38,7 +42,24 @@ class Diarization:
 
     def run(self, audio_file):
         self.initialize()
-        diarization = self.pipeline(audio_file)
+        audio_file_obj = Path(audio_file)
+
+        # Supported file types in soundfile is WAV, FLAC, OGG and MAT
+        if audio_file_obj.suffix in [".wav", ".flac", ".ogg", ".mat"]:
+            target_file = audio_file
+        else:
+            # Create temp WAV file
+            target_file = tempfile.mktemp(prefix="diarization_", suffix=".wav")
+            try:
+                ffmpeg.input(audio_file).output(target_file, ac=1).run()
+            except ffmpeg.Error as e:
+                print(f"Error occurred during audio conversion: {e.stderr}")
+
+        diarization = self.pipeline(target_file)
+
+        if target_file != audio_file:
+            # Delete temp file
+            os.remove(target_file)
 
         # Yield result
         for turn, _, speaker in diarization.itertracks(yield_label=True):
