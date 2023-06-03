@@ -10,7 +10,7 @@ from pyannote.audio import Pipeline
 import ffmpeg
 
 from intervaltree import IntervalTree
-from util import write_srt
+from src.util import write_srt
 
 class DiarizationEntry:
     def __init__(self, start, end, speaker):
