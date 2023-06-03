@@ -30,13 +30,14 @@ class DiarizationEntry:
         }
 
 class Diarization:
-    def __init__(self, auth_token):
+    def __init__(self, auth_token, **kwargs):
         if auth_token is None:
             raise ValueError("auth_token is required - use the HK_ACCESS_TOKEN or access_token parameter")
         
         self.auth_token = auth_token
         self.initialized = False
         self.pipeline = None
+        self.pipeline_kwargs = kwargs
 
     def initialize(self):
         if self.initialized:
@@ -63,7 +64,7 @@ class Diarization:
             except ffmpeg.Error as e:
                 print(f"Error occurred during audio conversion: {e.stderr}")
 
-        diarization = self.pipeline(target_file)
+        diarization = self.pipeline(target_file, **self.pipeline_kwargs)
 
         if target_file != audio_file:
             # Delete temp file
@@ -139,6 +140,9 @@ def main():
     parser.add_argument('--output_srt_file', type=str, default=None, help='Output SRT file (optional)')
     parser.add_argument('--auth_token', type=str, default=None, help='HuggingFace API Token (optional)')
     parser.add_argument("--max_line_width", type=int, default=40, help="Maximum line width for SRT file (default: 40)")
+    parser.add_argument("--num_speakers", type=int, default=None, help="Number of speakers")
+    parser.add_argument("--min_speakers", type=int, default=None, help="Minimum number of speakers")
+    parser.add_argument("--max_speakers", type=int, default=None, help="Maximum number of speakers")
 
     args = parser.parse_args()
 
@@ -154,7 +158,7 @@ def main():
     # Read whisper JSON or SRT file
     whisper_result = load_transcript(args.whisper_file)
 
-    diarization = Diarization(auth_token)
+    diarization = Diarization(auth_token, num_speakers=args.num_speakers, min_speakers=args.min_speakers, max_speakers=args.max_speakers)
     diarization_result = list(diarization.run(args.audio_file))
 
     # Print result
