@@ -132,7 +132,7 @@ def _write_file(input_file: str, output_path: str, output_extension: str, file_w
     print(f"Output saved to {effective_path}")
 
 def main():
-    parser = argparse.ArgumentParser(description='Add speakers to a SRT file using Whisper and pyannote/speaker-diarization.')
+    parser = argparse.ArgumentParser(description='Add speakers to a SRT file or Whisper JSON file using pyannote/speaker-diarization.')
     parser.add_argument('audio_file', type=str, help='Input audio file')
     parser.add_argument('whisper_file', type=str, help='Input Whisper JSON/SRT file')
     parser.add_argument('--output_json_file', type=str, default=None, help='Output JSON file (optional)')
