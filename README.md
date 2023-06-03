@@ -1,6 +1,7 @@
 # Speaker Diarization with Whisper and Pyannote
 
-This Python program takes an audio file and a Whisper JSON file as input (from [Whisper-WebUI](https://gitlab.com/aadnk/whisper-webui)), performs speaker diarization on the audio file using the pyannote/audio library, and then adds speaker labels to the Whisper JSON file, both as a extra JSON field and as a prefix in the segment text.
+This Python program takes an audio file and a Whisper JSON file as input from [Whisper-WebUI](https://gitlab.com/aadnk/whisper-webui), and performs speaker diarization on the audio file using the 
+[pyannote/speaker-diarization](https://huggingface.co/pyannote/speaker-diarization) model. The speakers are added to the resulting Whisper JSON file in each segment, and the most likely speaker is added to the text in the SRT file.
 
 ## Installation
 
@@ -20,6 +21,12 @@ This project requires Python 3.8 or newer. You may also want to consider using a
     conda activate whisper-diarization
     ```
 * Install [GPU version of PyTorch (optional):](https://pytorch.org/get-started/locally/)
+
+* Accept the user conditions on HuggingFace:
+
+    *  visit hf.co/pyannote/speaker-diarization and accept user conditions
+    *  visit hf.co/pyannote/segmentation and accept user conditions
+    *  visit hf.co/settings/tokens to create an access token, which you can then supply to the program
 
 * Install the dependencies:
     ```bash
@@ -49,6 +56,98 @@ For instance, if you have a file `audio.mp3` and a corresponding `audio.json` th
 python app.py audio.mp3 audio.json
 ```
 This will produce a file `audio_output.json` with the speaker labels added to the JSON file, and a file `audio_output.srt` with the speaker labels added to the segment text.
+
+Each segment in the JSON file with have the fields `longest_speaker` and `speakers`, 
+while the speaker will be prefixed in the SRT file.
+
+## Example
+
+Example input Whisper JSON:
+```json
+{
+    "text": "...",
+    "segments": [
+        {
+            "text": "だけどもあまり15%超えない方がいいですよ、知らない単語は。",
+            "start": 0.0,
+            "end": 4.0,
+            "words": []
+        },
+        {
+            "text": "20カ国語を話すことができる スティーブさんにインタビューしたことがありました",
+            "start": 10.608,
+            "end": 16.288,
+            "words": []
+        },
+        // ...
+    ],
+    "language": "ja",
+}
+```
+Program output:
+```
+$ python app.py audio.mp3 audio.json
+Diarization result:
+  start=0.5s stop=3.8s speaker_SPEAKER_00
+  start=3.8s stop=41.4s speaker_SPEAKER_01
+  start=42.9s stop=48.2s speaker_SPEAKER_01
+...
+```
+Output SRT:
+```srt
+1
+00:00:00,000 --> 00:00:04,000
+(SPEAKER_00)
+だけどもあまり15%超えない方がいいですよ、知らない単語は。
+
+2
+00:00:10,608 --> 00:00:16,288
+(SPEAKER_01) 20カ国語を話すことができる
+スティーブさんにインタビューしたことがありました
+```
+Output JSON:
+```json
+{
+    "text": "...",
+    "segments": [
+        {
+            "text": "だけどもあまり15%超えない方がいいですよ、知らない単語は。",
+            "start": 0.0,
+            "end": 4.0,
+            "words": [],
+            "longest_speaker": "SPEAKER_00",
+            "speakers": [
+                {
+                    "start": 3.7546875,
+                    "end": 41.4028125,
+                    "speaker": "SPEAKER_01"
+                },
+                {
+                    "start": 0.4978125,
+                    "end": 3.7546875,
+                    "speaker": "SPEAKER_00"
+                }
+            ]
+        },
+        {
+            "text": "20カ国語を話すことができる スティーブさんにインタビューしたことがありました",
+            "start": 10.608,
+            "end": 16.288,
+            "words": [],
+            "longest_speaker": "SPEAKER_01",
+            "speakers": [
+                {
+                    "start": 3.7546875,
+                    "end": 41.4028125,
+                    "speaker": "SPEAKER_01"
+                }
+            ]
+        },
+        // ...
+    ],
+    "language": "ja",
+}
+```
 
 ## Troubleshooting
 
