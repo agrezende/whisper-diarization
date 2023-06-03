@@ -30,6 +30,14 @@ def write_srt(transcript: Iterator[dict], file: TextIO, maxLineWidth=None):
 
 def __subtitle_preprocessor_iterator(transcript: Iterator[dict], maxLineWidth: int = None, highlight_words: bool = False): 
     for segment in transcript:
+        text = segment['text']
+
+        # Append longest speaker ID if available
+        segment_longest_speaker = segment.get('longest_speaker', None)
+
+        if segment_longest_speaker is not None:
+            text = f"({segment_longest_speaker}) {text}"
+
         # Yield the segment as-is or processed
         if maxLineWidth is None or maxLineWidth < 0:
             yield segment
@@ -37,7 +45,7 @@ def __subtitle_preprocessor_iterator(transcript: Iterator[dict], maxLineWidth: i
             yield {
                 'start': segment['start'],
                 'end': segment['end'],
-                'text': process_text(segment['text'].strip(), maxLineWidth)
+                'text': process_text(text.strip(), maxLineWidth)
             }
 
 def process_text(text: str, maxLineWidth=None):

@@ -20,6 +20,13 @@ class DiarizationEntry:
 
     def __repr__(self):
         return f"<DiarizationEntry start={self.start} end={self.end} speaker={self.speaker}>"
+    
+    def toJson(self):
+        return {
+            "start": self.start,
+            "end": self.end,
+            "speaker": self.speaker
+        }
 
 class Diarization:
     def __init__(self, auth_token):
@@ -71,7 +78,7 @@ class Diarization:
         # Create an interval tree from the diarization results
         tree = IntervalTree()
         for entry in diarization_result:
-            tree[entry.start:entry.end] = entry.speaker
+            tree[entry.start:entry.end] = entry
 
         # Iterate through each segment in the Whisper JSON
         for segment in result["segments"]:
@@ -95,11 +102,14 @@ class Diarization:
                 overlap_duration = overlap_end - overlap_start
 
                 if overlap_duration > longest_duration:
-                    longest_speaker = speaker_interval.data
+                    longest_speaker = speaker_interval.data.speaker
                     longest_duration = overlap_duration
 
-            # Annotate the segment with the longest overlapping speaker ID
-            segment["text"] = f"({longest_speaker}) {segment['text']}"
+            # Add speakers
+            segment["longest_speaker"] = longest_speaker
+            segment["speakers"] = list([speaker_interval.data.toJson() for speaker_interval in overlapping_speakers])
+
+            # The write_srt will use the longest_speaker if it exist, and add it to the text field
 
         return result
 
