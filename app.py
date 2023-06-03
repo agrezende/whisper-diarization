@@ -10,6 +10,7 @@ from pyannote.audio import Pipeline
 import ffmpeg
 
 from intervaltree import IntervalTree
+from src.transcriptLoader import load_transcript
 from src.util import write_srt
 
 class DiarizationEntry:
@@ -133,7 +134,7 @@ def _write_file(input_file: str, output_path: str, output_extension: str, file_w
 def main():
     parser = argparse.ArgumentParser(description='Add speakers to a SRT file using Whisper and pyannote/speaker-diarization.')
     parser.add_argument('audio_file', type=str, help='Input audio file')
-    parser.add_argument('whisper_file', type=str, help='Input Whisper JSON file')
+    parser.add_argument('whisper_file', type=str, help='Input Whisper JSON/SRT file')
     parser.add_argument('--output_json_file', type=str, default=None, help='Output JSON file (optional)')
     parser.add_argument('--output_srt_file', type=str, default=None, help='Output SRT file (optional)')
     parser.add_argument('--auth_token', type=str, default=None, help='HuggingFace API Token (optional)')
@@ -150,9 +151,8 @@ def main():
 
     print("\nReading whisper JSON from " + args.whisper_file)
 
-    # Read whisper JSON file
-    with open(args.whisper_file, "r", encoding="utf-8") as f:
-        whisper_result = json.load(f)
+    # Read whisper JSON or SRT file
+    whisper_result = load_transcript(args.whisper_file)
 
     diarization = Diarization(auth_token)
     diarization_result = list(diarization.run(args.audio_file))
@@ -161,29 +161,6 @@ def main():
     print("Diarization result:")
     for entry in diarization_result:
         print(f"  start={entry.start:.1f}s stop={entry.end:.1f}s speaker_{entry.speaker}")
-
-    # Format of Whisper JSON file:
-    #  {
-    # "text": " And so my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
-    # "segments": [
-    #    {
-    #        "text": " And so my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
-    #        "start": 0.0,
-    #        "end": 10.36,
-    #        "words": [
-    #            {
-    #                "start": 0.0,
-    #                "end": 0.56,
-    #                "word": " And",
-    #                "probability": 0.61767578125
-    #            },
-    #            {
-    #                "start": 0.56,
-    #                "end": 0.88,
-    #                "word": " so",
-    #                "probability": 0.9033203125
-    #            },
-    # etc.  
 
     marked_whisper_result = diarization.mark_speakers(diarization_result, whisper_result)
 
