@@ -43,10 +43,31 @@ set HK_ACCESS_TOKEN=your-token-here  # Windows
 ```
 To run the program, use the following command:
 
-```bash
-python app.py /path/to/audio/file /path/to/whisper.json \
---output_json_file /path/to/output.json \
---output_srt_file /path/to/output.srt --auth_token your-token-here
+```
+usage: app.py [-h] [--output_json_file OUTPUT_JSON_FILE] [--output_srt_file OUTPUT_SRT_FILE] [--auth_token AUTH_TOKEN] [--max_line_width MAX_LINE_WIDTH] [--num_speakers NUM_SPEAKERS] [--min_speakers MIN_SPEAKERS] [--max_speakers MAX_SPEAKERS] audio_file whisper_file
+
+Add speakers to a SRT file or Whisper JSON file using pyannote/speaker-diarization.
+
+positional arguments:
+  audio_file            Input audio file
+  whisper_file          Input Whisper JSON/SRT file
+
+options:
+  -h, --help            show this help message and exit
+  --output_json_file OUTPUT_JSON_FILE
+                        Output JSON file (optional)
+  --output_srt_file OUTPUT_SRT_FILE
+                        Output SRT file (optional)
+  --auth_token AUTH_TOKEN
+                        HuggingFace API Token (optional)
+  --max_line_width MAX_LINE_WIDTH
+                        Maximum line width for SRT file (default: 40)
+  --num_speakers NUM_SPEAKERS
+                        Number of speakers
+  --min_speakers MIN_SPEAKERS
+                        Minimum number of speakers
+  --max_speakers MAX_SPEAKERS
+                        Maximum number of speakers
 ```
 The `--output_file` and `--auth_token` arguments are optional. If not specified, the output file will be named after the input Whisper JSON file with _output added to the filename, and the auth token will be read from the HK_ACCESS_TOKEN environment variable.
 
